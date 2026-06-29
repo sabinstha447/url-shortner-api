@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Options;
+using URl_Shortner.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace URl_Shortner
 {
@@ -10,6 +13,7 @@ namespace URl_Shortner
             // Add services to the container.
 
             builder.Services.AddControllers();
+            builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
