@@ -1,6 +1,12 @@
-﻿namespace URl_Shortner.Services
+﻿using URl_Shortner.DTOs;
+
+namespace URl_Shortner.Services
 {
-    public class IAuthService
+    public interface IAuthService
     {
+        public Task<string> Register(RegisterRequest userRequest);
+
+        public Task<string> Login(LoginRequest loginRequest);
+   
     }
 }
