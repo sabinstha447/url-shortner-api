@@ -32,7 +32,8 @@ namespace URl_Shortner.Services
             var passwordValid = BCrypt.Net.BCrypt.Verify(logged.Password, loggedUser.PasswordHash);
             if (passwordValid)
             {
-                return GenerateJwtToken(loggedUser);
+                return $"Welcome {loggedUser.Email}: Token {GenerateJwtToken(loggedUser)}";
+               
             }
 
             return "Invalid email or password";
