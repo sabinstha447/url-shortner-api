@@ -8,10 +8,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
 
 namespace URl_Shortner.Services
 {
-    public class AuthService: IAuthService
+    public class AuthService : IAuthService
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
@@ -19,7 +20,7 @@ namespace URl_Shortner.Services
         {
             _context = context;
             _configuration = configuration;
-            
+
         }
         public async Task<string> Login(LoginRequest logged)
         {
@@ -33,32 +34,40 @@ namespace URl_Shortner.Services
             {
                 return GenerateJwtToken(loggedUser);
             }
-           
+
             return "Invalid email or password";
         }
         private string GenerateJwtToken(User user)
         {
-            var claims = new List<Claim>{
+            // Step 1: Create a list of facts about the user (id and email)
+            var claims = new List<Claim>
+            {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email)
-       
+                new Claim(ClaimTypes.Email ,user.Email)
+
             };
-            //Stamping Tool
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+
+            // Step 2: Get the secret key from config and convert it to bytes, wrap in SymmetricSecurityKey
+            var config = _configuration["Jwt:Key"];
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config));
+
+
+            // Step 3: Create signing credentials using the key and HmacSha256 algorithm
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            // Building the Card
+            // Step 4: Build the token with issuer, claims, expiry, and signing credentials
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 claims: claims,
-                expires : DateTime.UtcNow.AddMinutes(60),
+                expires: DateTime.UtcNow.AddMinutes(60),
                 signingCredentials: credentials
 
                 );
-            return new JwtSecurityTokenHandler().WriteToken(token);
 
-                
-               
+            // Step 5: Convert the token object to a string and return it
+
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
         public async Task<string> Register(RegisterRequest registered)
         {
@@ -70,14 +79,14 @@ namespace URl_Shortner.Services
             else
             {
                 var userPassword = BCrypt.Net.BCrypt.HashPassword(registered.Password);
-                User newUser = new User { Email = registered.Email, PasswordHash =userPassword };
+                User newUser = new User { Email = registered.Email, PasswordHash = userPassword };
                 _context.Users.Add(newUser);
                 var addingUser = await _context.SaveChangesAsync();
                 return $"YOu are Now registered {newUser.Email}";
             }
-            
-            
-            
+
+
+
         }
     }
 }
